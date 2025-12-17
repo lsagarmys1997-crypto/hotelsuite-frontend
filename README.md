@@ -1,0 +1,1 @@
+# HotelSuite Frontend
