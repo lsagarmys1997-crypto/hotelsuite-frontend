@@ -8,19 +8,13 @@ import {
   ConciergeBell
 } from 'lucide-react';
 
-type Ticket = {
-  id: string;
-  title: string;
-  status: string;
-};
-
 export default function GuestDashboard() {
   const [guestName, setGuestName] = useState('Guest');
   const [roomNumber, setRoomNumber] = useState('—');
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-    // Load guest info from localStorage
+    // Load guest info
     const guest = localStorage.getItem('guest');
     if (guest) {
       const g = JSON.parse(guest);
@@ -28,7 +22,7 @@ export default function GuestDashboard() {
       setRoomNumber(g.room_number || '—');
     }
 
-    // Fetch tickets
+    // Load tickets
     const token = localStorage.getItem('token');
     if (!token) return;
 
@@ -114,17 +108,9 @@ export default function GuestDashboard() {
   );
 }
 
-/* ---------------- Components ---------------- */
+/* ---------- Components ---------- */
 
-function ServiceCard({
-  icon,
-  title,
-  desc
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
+function ServiceCard({ icon, title, desc }) {
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm active:scale-95 transition">
       <div className="text-green-600 mb-3">{icon}</div>
@@ -138,8 +124,8 @@ function ServiceCard({
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
+function StatusBadge({ status }) {
+  const map = {
     open: 'bg-yellow-100 text-yellow-700',
     in_progress: 'bg-blue-100 text-blue-700',
     closed: 'bg-green-100 text-green-700',
