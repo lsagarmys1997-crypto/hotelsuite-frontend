@@ -7,83 +7,99 @@ export default function StaffDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('staff_token');
-    const userData = localStorage.getItem('staff_user');
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
 
     if (!token || !userData) {
       router.push('/staff/login');
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    setUser(parsedUser);
+    setUser(JSON.parse(userData));
 
-    fetchTickets(token);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/staff/tickets`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => setTickets(data.tickets || []));
   }, []);
 
-  async function fetchTickets(token) {
-    try {
-      const res = await fetch(
-        'https://hotelsuite-backend.onrender.com/api/staff/tickets',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+  const updateStatus = async (id, status) => {
+    const token = localStorage.getItem('token');
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch tickets');
+    await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/staff/tickets/${id}/status`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
       }
+    );
 
-      setTickets(data.tickets);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (!user) return <p>Loading...</p>;
+    window.location.reload();
+  };
 
   return (
-    <div style={styles.container}>
+    <div style={{ padding: '20px' }}>
       <h1>Staff Dashboard</h1>
 
-      <div style={styles.userCard}>
-        <p><b>Name:</b> {user.name}</p>
-        <p><b>Department:</b> {user.department}</p>
-        <p><b>Role:</b> {user.role}</p>
-      </div>
+      {user && (
+        <div style={{ background: '#eef', padding: '10px', width: '300px' }}>
+          <p><b>Name:</b> {user.name}</p>
+          <p><b>Department:</b> {user.department}</p>
+          <p><b>Role:</b> {user.role}</p>
+        </div>
+      )}
 
       <h2>Open Tickets</h2>
 
-      {loading && <p>Loading tickets...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {!loading && tickets.length === 0 && (
-        <p>No open tickets 🎉</p>
-      )}
+      {tickets.length === 0 && <p>No open tickets 🎉</p>}
 
       {tickets.map(ticket => (
-        <div key={ticket.id} style={styles.ticketCard}>
-          <p><b>Room:</b> {ticket.room_number}</p>
-          <p><b>Guest:</b> {ticket.guest_name || '—'}</p>
+        <div
+          key={ticket.id}
+          style={{
+            border: '1px solid #ccc',
+            padding: '10px',
+            marginBottom: '10px'
+          }}
+        >
+          <p><b>Room:</b> {ticket.room_number || '-'}</p>
+          <p><b>Guest:</b> {ticket.guest_name || '-'}</p>
           <p><b>Title:</b> {ticket.title}</p>
           <p><b>Description:</b> {ticket.description}</p>
           <p><b>Status:</b> {ticket.status}</p>
           <p><b>Priority:</b> {ticket.priority}</p>
+
+          {ticket.status !== 'closed' && (
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={() => updateStatus(ticket.id, 'in_progress')}>
+                In-Progress
+              </button>{' '}
+              <button onClick={() => updateStatus(ticket.id, 'closed')}>
+                Close
+              </button>{' '}
+              <button onClick={() => updateStatus(ticket.id, 'not_in_room')}>
+                Not in Room
+              </button>{' '}
+              <button onClick={() =>
+                updateStatus(ticket.id, 'guest_not_responding')
+              }>
+                Guest Not Responding
+              </button>
+            </div>
+          )}
         </div>
       ))}
 
       <button
-        style={styles.logout}
         onClick={() => {
           localStorage.clear();
           router.push('/staff/login');
@@ -94,29 +110,3 @@ export default function StaffDashboard() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: 30,
-    fontFamily: 'Arial'
-  },
-  userCard: {
-    background: '#eef',
-    padding: 15,
-    borderRadius: 6,
-    maxWidth: 400,
-    marginBottom: 20
-  },
-  ticketCard: {
-    border: '1px solid #ccc',
-    padding: 15,
-    borderRadius: 6,
-    marginBottom: 10,
-    background: '#fafafa'
-  },
-  logout: {
-    marginTop: 20,
-    padding: 10,
-    cursor: 'pointer'
-  }
-};
