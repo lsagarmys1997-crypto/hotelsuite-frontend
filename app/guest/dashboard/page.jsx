@@ -5,137 +5,220 @@ import {
   BedDouble,
   Utensils,
   Wrench,
-  ConciergeBell
+  ConciergeBell,
+  X
 } from 'lucide-react';
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 export default function GuestDashboard() {
-  const [guestName, setGuestName] = useState('Guest');
-  const [roomNumber, setRoomNumber] = useState('—');
+  const [guest, setGuest] = useState(null);
   const [tickets, setTickets] = useState([]);
+  const [activeTab, setActiveTab] = useState('services');
 
+  const [modal, setModal] = useState(null);
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+
+  /* ---------- Load Guest & Tickets ---------- */
   useEffect(() => {
-    // Load guest info
-    const guest = localStorage.getItem('guest');
-    if (guest) {
-      const g = JSON.parse(guest);
-      setGuestName(g.name || 'Guest');
-      setRoomNumber(g.room_number || '—');
-    }
+    const g = localStorage.getItem('guest_user');
+    const token = localStorage.getItem('guest_token');
 
-    // Load tickets
-    const token = localStorage.getItem('token');
+    if (g) setGuest(JSON.parse(g));
     if (!token) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/guest/tickets`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    fetch(`${API}/api/guest/tickets`, {
+      headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => {
-        setTickets(data.tickets || []);
-      })
+      .then(data => setTickets(data.tickets || []))
       .catch(() => {});
   }, []);
 
+  /* ---------- Create Ticket ---------- */
+  const submitRequest = async () => {
+    const token = localStorage.getItem('guest_token');
+
+    await fetch(`${API}/api/guest/tickets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        title,
+        description: desc,
+        department: modal
+      })
+    });
+
+    setModal(null);
+    setTitle('');
+    setDesc('');
+    window.location.reload();
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-slate-100 p-4">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Welcome, {guestName} 👋
-        </h1>
-        <p className="text-gray-500">Room {roomNumber}</p>
-      </div>
-
-      {/* Service Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <ServiceCard
-          icon={<BedDouble size={28} />}
-          title="Housekeeping"
-          desc="Cleaning, towels, water"
-        />
-        <ServiceCard
-          icon={<Utensils size={28} />}
-          title="Room Service"
-          desc="Food & beverages"
-        />
-        <ServiceCard
-          icon={<Wrench size={28} />}
-          title="Maintenance"
-          desc="AC, lights, TV"
-        />
-        <ServiceCard
-          icon={<ConciergeBell size={28} />}
-          title="Concierge"
-          desc="Travel & assistance"
-        />
-      </div>
-
-      {/* My Requests */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">
-          My Requests
-        </h2>
-
-        {tickets.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            No requests yet
+      <header className="bg-white rounded-2xl p-4 shadow mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-semibold">
+            Welcome, {guest?.name || 'Guest'} 👋
+          </h1>
+          <p className="text-sm text-gray-500">
+            Room {guest?.room_number || '—'}
           </p>
-        ) : (
-          <div className="space-y-3">
-            {tickets.map(ticket => (
+        </div>
+        <img src="/logo.png" className="w-10" />
+      </header>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-5">
+        {['services', 'requests', 'about'].map(t => (
+          <button
+            key={t}
+            onClick={() => setActiveTab(t)}
+            className={`px-4 py-2 rounded-full text-sm font-medium ${
+              activeTab === t
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white shadow'
+            }`}
+          >
+            {t.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* SERVICES */}
+      {activeTab === 'services' && (
+        <div className="grid grid-cols-2 gap-4">
+          <Service
+            icon={<BedDouble />}
+            title="Housekeeping"
+            desc="Cleaning, towels, water"
+            onClick={() => setModal('housekeeping')}
+          />
+          <Service
+            icon={<Utensils />}
+            title="Room Service"
+            desc="Food & beverages"
+            onClick={() => setModal('room_service')}
+          />
+          <Service
+            icon={<Wrench />}
+            title="Maintenance"
+            desc="AC, lights, TV"
+            onClick={() => setModal('maintenance')}
+          />
+          <Service
+            icon={<ConciergeBell />}
+            title="Concierge"
+            desc="Travel & assistance"
+            onClick={() => setModal('concierge')}
+          />
+        </div>
+      )}
+
+      {/* REQUESTS */}
+      {activeTab === 'requests' && (
+        <div className="space-y-3">
+          {tickets.length === 0 ? (
+            <p className="text-gray-500">No requests yet</p>
+          ) : (
+            tickets.map(t => (
               <div
-                key={ticket.id}
-                className="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center"
+                key={t.id}
+                className="bg-white p-4 rounded-xl shadow flex justify-between"
               >
                 <div>
-                  <p className="font-medium text-gray-800">
-                    {ticket.title}
-                  </p>
-                  <p className="text-sm text-gray-500 capitalize">
-                    {ticket.status.replace('_', ' ')}
+                  <p className="font-medium">{t.title}</p>
+                  <p className="text-sm text-gray-500">
+                    {t.description}
                   </p>
                 </div>
-
-                <StatusBadge status={ticket.status} />
+                <Status status={t.status} />
               </div>
-            ))}
+            ))
+          )}
+        </div>
+      )}
+
+      {/* ABOUT */}
+      {activeTab === 'about' && (
+        <div className="bg-white p-5 rounded-xl shadow text-gray-600">
+          <h2 className="font-semibold mb-2">About HotelSuite</h2>
+          <p>
+            Request housekeeping, maintenance, food & concierge
+            services directly from your room.
+          </p>
+        </div>
+      )}
+
+      {/* MODAL */}
+      {modal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-5 rounded-2xl w-80">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold capitalize">
+                {modal.replace('_', ' ')}
+              </h3>
+              <X onClick={() => setModal(null)} />
+            </div>
+
+            <input
+              className="w-full border p-2 rounded mb-2"
+              placeholder="Title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+            />
+            <textarea
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Describe your request"
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+            />
+
+            <button
+              onClick={submitRequest}
+              className="w-full bg-indigo-600 text-white py-2 rounded-lg"
+            >
+              Submit Request
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ---------- Components ---------- */
 
-function ServiceCard({ icon, title, desc }) {
+function Service({ icon, title, desc, onClick }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm active:scale-95 transition">
-      <div className="text-green-600 mb-3">{icon}</div>
-      <h3 className="font-semibold text-gray-800">
-        {title}
-      </h3>
-      <p className="text-sm text-gray-500">
-        {desc}
-      </p>
+    <div
+      onClick={onClick}
+      className="bg-white p-5 rounded-2xl shadow hover:scale-105 transition cursor-pointer"
+    >
+      <div className="text-indigo-600 mb-3">{icon}</div>
+      <h3 className="font-semibold">{title}</h3>
+      <p className="text-sm text-gray-500">{desc}</p>
     </div>
   );
 }
 
-function StatusBadge({ status }) {
+function Status({ status }) {
   const map = {
     open: 'bg-yellow-100 text-yellow-700',
     in_progress: 'bg-blue-100 text-blue-700',
-    closed: 'bg-green-100 text-green-700',
-    guest_not_in_room: 'bg-red-100 text-red-700'
+    closed: 'bg-green-100 text-green-700'
   };
 
   return (
     <span
       className={`text-xs px-3 py-1 rounded-full ${
-        map[status] || 'bg-gray-100 text-gray-600'
+        map[status] || 'bg-gray-200'
       }`}
     >
       {status.replace('_', ' ')}
