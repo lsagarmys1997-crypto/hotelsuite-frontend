@@ -11,11 +11,6 @@ export default function GuestLogin() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!room || !phone) {
-      setError('Please enter room number and phone');
-      return;
-    }
-
     setError('');
     setLoading(true);
 
@@ -45,47 +40,63 @@ export default function GuestLogin() {
 
       router.push('/guest/dashboard');
     } catch (err) {
-      setError('Network error. Try again.');
+      setError('Network error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-slate-100 px-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
         {/* Logo */}
-        <img src="/logo.png" alt="HotelSuite" style={styles.logo} />
+        <div className="text-center mb-6">
+          <div className="text-3xl font-bold text-indigo-600">
+            HotelSuite
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Guest Services Portal
+          </p>
+        </div>
 
-        <h2 style={styles.title}>Welcome Guest 👋</h2>
-        <p style={styles.subtitle}>Login to request services</p>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+          Guest Login
+        </h2>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && (
+          <p className="text-sm text-red-600 text-center mb-3">
+            {error}
+          </p>
+        )}
 
-        <input
-          style={styles.input}
-          placeholder="Room Number"
-          value={room}
-          onChange={e => setRoom(e.target.value)}
-        />
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Room Number"
+            value={room}
+            onChange={e => setRoom(e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+          />
 
-        <input
-          style={styles.input}
-          placeholder="Phone Number"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-        />
+          <input
+            type="tel"
+            placeholder="Phone Number"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+          />
 
-        <button
-          style={styles.button}
-          onClick={handleLogin}
-          disabled={loading}
-        >
-          {loading ? 'Please wait…' : 'Continue'}
-        </button>
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </div>
 
-        <p style={styles.footer}>
-          Powered by <b>HotelSuite</b>
+        <p className="text-xs text-gray-400 text-center mt-6">
+          Scan QR code in your room to access services
         </p>
       </div>
     </div>
