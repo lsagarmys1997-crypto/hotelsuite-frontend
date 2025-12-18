@@ -8,76 +8,86 @@ export default function GuestLogin() {
   const [room, setRoom] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    setError('');
-
-    const res = await fetch(
-      'https://hotelsuite-backend.onrender.com/api/guest/login',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room_number: room,
-          phone
-        })
-      }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || 'Login failed');
+    if (!room || !phone) {
+      setError('Please enter room number and phone');
       return;
     }
 
-    localStorage.setItem('guest_token', data.token);
-    localStorage.setItem('guest_user', JSON.stringify(data.guest));
+    setError('');
+    setLoading(true);
 
-    router.push('/guest/dashboard');
+    try {
+      const res = await fetch(
+        'https://hotelsuite-backend.onrender.com/api/guest/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room_number: room,
+            phone
+          })
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Login failed');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('guest_token', data.token);
+      localStorage.setItem('guest_user', JSON.stringify(data.guest));
+
+      router.push('/guest/dashboard');
+    } catch (err) {
+      setError('Network error. Try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={styles.container}>
+    <div style={styles.page}>
       <div style={styles.card}>
-        <h2>Guest Login</h2>
+        {/* Logo */}
+        <img src="/logo.png" alt="HotelSuite" style={styles.logo} />
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <h2 style={styles.title}>Welcome Guest 👋</h2>
+        <p style={styles.subtitle}>Login to request services</p>
+
+        {error && <div style={styles.error}>{error}</div>}
 
         <input
+          style={styles.input}
           placeholder="Room Number"
           value={room}
           onChange={e => setRoom(e.target.value)}
         />
 
         <input
+          style={styles.input}
           placeholder="Phone Number"
           value={phone}
           onChange={e => setPhone(e.target.value)}
         />
 
-        <button onClick={handleLogin}>Login</button>
+        <button
+          style={styles.button}
+          onClick={handleLogin}
+          disabled={loading}
+        >
+          {loading ? 'Please wait…' : 'Continue'}
+        </button>
+
+        <p style={styles.footer}>
+          Powered by <b>HotelSuite</b>
+        </p>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    background: '#f4f6f8'
-  },
-  card: {
-    background: '#fff',
-    padding: 25,
-    width: 300,
-    borderRadius: 10,
-    boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12
-  }
-};
