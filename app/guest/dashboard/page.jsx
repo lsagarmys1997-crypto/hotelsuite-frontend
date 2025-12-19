@@ -9,7 +9,7 @@ export default function GuestDashboard() {
   const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-    const g = localStorage.getItem('guest');
+    const g = localStorage.getItem('guest_user');
     if (g) setGuest(JSON.parse(g));
 
     const token = localStorage.getItem('guest_token');
@@ -185,10 +185,11 @@ function About() {
   return (
     <div className="bg-white rounded-xl p-5 shadow">
       <h2 className="font-semibold text-gray-800 mb-2">
-        About Our Hotel
+        Welcome 👋
       </h2>
       <p className="text-sm text-gray-600 leading-relaxed">
-        HotelSuite is an all-in-one SaaS platform built for hotels and resorts to simplify guest interactions and streamline internal operations. It unifies guest-facing services—such as service requests, in-stay chat, and targeted promotions—with back-office operations including task ticketing, staff assignment, and real-time management dashboards.
+        Your stay, made simple.
+        Request services, chat with staff, and explore exclusive offers—all in one place.
       </p>
       <p className="text-sm text-gray-600 mt-3">
         For emergencies, please contact reception immediately.
