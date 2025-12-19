@@ -49,6 +49,11 @@ export default function GuestDashboard() {
             <p className="font-semibold text-gray-800 leading-tight">
               HotelSuite
             </p>
+            {/* ✅ Guest Name */}
+            <p className="text-sm text-gray-700">
+              {guest?.name ? `Welcome, ${guest.name}` : 'Welcome, Guest'}
+            </p>
+             {/* Room Number */}
             <p className="text-xs text-gray-500">
               Room {guest?.room_number || '—'}
             </p>
