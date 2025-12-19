@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Optional global styling */
 body {
-  background-color: #99bdbc;
+  @apply bg-slate-100 text-slate-800;
 }
