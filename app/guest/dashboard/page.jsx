@@ -9,7 +9,7 @@ export default function GuestDashboard() {
   const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-    const g = localStorage.getItem('guest_user');
+    const g = localStorage.getItem('name');
     if (g) setGuest(JSON.parse(g));
 
     const token = localStorage.getItem('guest_token');
