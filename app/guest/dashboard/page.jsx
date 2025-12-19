@@ -7,35 +7,39 @@ export default function GuestDashboard() {
   const [activeTab, setActiveTab] = useState('services');
   const [guest, setGuest] = useState(null);
   const [tickets, setTickets] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
 
-  useEffect(() => {
-    const g = localStorage.getItem('guest_user');
-    if (g) setGuest(JSON.parse(g));
-
+  /* ================= LOAD GUEST + TICKETS ================= */
+  const loadTickets = () => {
     const token = localStorage.getItem('guest_token');
     if (!token) return;
 
     fetch('https://hotelsuite-backend.onrender.com/api/guest/tickets', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setTickets(data.tickets || []))
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    const g = localStorage.getItem('guest_user');
+    if (g) setGuest(JSON.parse(g));
+    loadTickets();
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('guest_token');
-    localStorage.removeItem('guest');
+    localStorage.removeItem('guest_user');
     window.location.href = '/guest/login';
   };
 
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gray-100">
       {/* ================= HEADER ================= */}
-      <div className="bg-white shadow px-4 py-3 flex items-center justify-between">
-        {/* Brand */}
+      <header className="bg-white shadow px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Image
             src="/logo.png"
@@ -49,61 +53,66 @@ export default function GuestDashboard() {
             <p className="font-semibold text-gray-800 leading-tight">
               HotelSuite
             </p>
-            {/* ✅ Guest Name */}
             <p className="text-sm text-gray-700">
               {guest?.name ? `Welcome, ${guest.name}` : 'Welcome, Guest'}
             </p>
-             {/* Room Number */}
             <p className="text-xs text-gray-500">
               Room {guest?.room_number || '—'}
             </p>
           </div>
         </div>
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="text-sm font-medium text-red-600 hover:underline"
         >
           Logout
         </button>
-      </div>
+      </header>
 
       {/* ================= TABS ================= */}
-      <div className="flex justify-around bg-white border-b">
-        <Tab
-          label="Services"
-          active={activeTab === 'services'}
-          onClick={() => setActiveTab('services')}
-        />
-        <Tab
-          label="My Requests"
-          active={activeTab === 'requests'}
-          onClick={() => setActiveTab('requests')}
-        />
-        <Tab
-          label="About"
-          active={activeTab === 'about'}
-          onClick={() => setActiveTab('about')}
-        />
-      </div>
+      <nav className="flex bg-white border-b">
+        <Tab label="Services" active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
+        <Tab label="My Requests" active={activeTab === 'requests'} onClick={() => setActiveTab('requests')} />
+        <Tab label="About" active={activeTab === 'about'} onClick={() => setActiveTab('about')} />
+      </nav>
 
       {/* ================= CONTENT ================= */}
-      <div className="p-4">
-        {activeTab === 'services' && <Services />}
+      <main className="p-4">
+        {activeTab === 'services' && (
+          <Services
+            onSelect={(service) => {
+              setSelectedService(service);
+              setShowModal(true);
+            }}
+          />
+        )}
+
         {activeTab === 'requests' && <Requests tickets={tickets} />}
         {activeTab === 'about' && <About />}
-      </div>
+      </main>
+
+      {/* ================= REQUEST MODAL ================= */}
+      {showModal && selectedService && (
+        <RequestModal
+          service={selectedService}
+          onClose={() => setShowModal(false)}
+          onSuccess={() => {
+            loadTickets();
+            setActiveTab('requests');
+          }}
+        />
+      )}
     </div>
   );
 }
 
-/* ---------- Tabs ---------- */
+/* ================= TAB ================= */
 function Tab({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`py-3 text-sm font-medium w-full ${
+      className={`w-full py-3 text-sm font-medium ${
         active
           ? 'text-indigo-600 border-b-2 border-indigo-600'
           : 'text-gray-500'
@@ -114,39 +123,36 @@ function Tab({ label, active, onClick }) {
   );
 }
 
-/* ---------- Services ---------- */
-function Services() {
+/* ================= SERVICES ================= */
+function Services({ onSelect }) {
   const services = [
-    { title: 'Housekeeping', desc: 'Cleaning, towels, water', icon: '🧹' },
-    { title: 'Room Service', desc: 'Food & beverages', icon: '🍽️' },
-    { title: 'Maintenance', desc: 'AC, TV, lights', icon: '🛠️' },
-    { title: 'Concierge', desc: 'Travel & assistance', icon: '🛎️' }
+    { title: 'Housekeeping', desc: 'Cleaning, towels, water', department: 'housekeeping', icon: '🧹' },
+    { title: 'Room Service', desc: 'Food & beverages', department: 'room_service', icon: '🍽️' },
+    { title: 'Maintenance', desc: 'AC, TV, lights', department: 'maintenance', icon: '🛠️' },
+    { title: 'Concierge', desc: 'Travel & assistance', department: 'concierge', icon: '🛎️' }
   ];
 
   return (
     <div className="grid grid-cols-2 gap-4">
       {services.map(s => (
-        <div
+        <button
           key={s.title}
-          className="bg-white rounded-2xl p-4 shadow hover:shadow-md active:scale-95 transition cursor-pointer"
+          onClick={() => onSelect(s)}
+          className="bg-white rounded-2xl p-4 shadow hover:shadow-md active:scale-95 transition text-left"
         >
           <div className="text-3xl mb-2">{s.icon}</div>
           <h3 className="font-semibold text-gray-800">{s.title}</h3>
           <p className="text-sm text-gray-500">{s.desc}</p>
-        </div>
+        </button>
       ))}
     </div>
   );
 }
 
-/* ---------- Requests ---------- */
+/* ================= REQUESTS ================= */
 function Requests({ tickets }) {
   if (tickets.length === 0) {
-    return (
-      <p className="text-sm text-gray-500">
-        No requests raised yet.
-      </p>
-    );
+    return <p className="text-sm text-gray-500">No requests raised yet.</p>;
   }
 
   return (
@@ -185,19 +191,91 @@ function statusColor(status) {
   }
 }
 
-/* ---------- About ---------- */
+/* ================= MODAL ================= */
+function RequestModal({ service, onClose, onSuccess }) {
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('guest_token');
+
+      const res = await fetch(
+        'https://hotelsuite-backend.onrender.com/api/guest/tickets',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            title: service.title,
+            description,
+            department: service.department,
+            priority: 'normal'
+          })
+        }
+      );
+
+      if (!res.ok) throw new Error('Failed to raise request');
+      onSuccess();
+      onClose();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-5 w-full max-w-md shadow-lg">
+        <h2 className="font-semibold text-gray-800 mb-1">
+          {service.title} Request
+        </h2>
+
+        <textarea
+          rows={4}
+          placeholder="Describe your request"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-sm mt-3"
+        />
+
+        {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+
+        <div className="flex justify-end gap-2 mt-4">
+          <button onClick={onClose} className="text-sm text-gray-600">
+            Cancel
+          </button>
+          <button
+            onClick={submit}
+            disabled={!description || loading}
+            className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white disabled:opacity-50"
+          >
+            {loading ? 'Submitting...' : 'Submit'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= ABOUT ================= */
 function About() {
   return (
     <div className="bg-white rounded-xl p-5 shadow">
       <h2 className="font-semibold text-gray-800 mb-2">
-        Welcome 👋
+        About HotelSuite
       </h2>
       <p className="text-sm text-gray-600 leading-relaxed">
-        Your stay, made simple.
-        Request services, chat with staff, and explore exclusive offers—all in one place.
-      </p>
-      <p className="text-sm text-gray-600 mt-3">
-        For emergencies, please contact reception immediately.
+        HotelSuite is a unified guest service platform that lets you request
+        housekeeping, room service, maintenance, and concierge support
+        seamlessly during your stay.
       </p>
     </div>
   );
