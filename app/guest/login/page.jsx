@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function GuestLogin() {
   const router = useRouter();
@@ -11,6 +12,11 @@ export default function GuestLogin() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!room || !phone) {
+      setError('Please enter room number and phone');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -36,46 +42,50 @@ export default function GuestLogin() {
       }
 
       localStorage.setItem('guest_token', data.token);
-      localStorage.setItem('guest_user', JSON.stringify(data.guest));
+      localStorage.setItem('guest', JSON.stringify(data.guest));
 
       router.push('/guest/dashboard');
     } catch (err) {
-      setError('Network error');
-    } finally {
+      setError('Server error. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-slate-100 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-blue-100 px-4">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
+        
         {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="text-3xl font-bold text-indigo-600">
-            HotelSuite
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Guest Services Portal
-          </p>
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/logo.png"
+            alt="HotelSuite"
+            width={80}
+            height={80}
+          />
         </div>
 
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
-          Guest Login
-        </h2>
+        <h1 className="text-2xl font-semibold text-center text-gray-800">
+          Guest Services
+        </h1>
+        <p className="text-center text-gray-500 text-sm mb-6">
+          Access hotel services from your room
+        </p>
 
         {error && (
-          <p className="text-sm text-red-600 text-center mb-3">
+          <div className="bg-red-100 text-red-700 text-sm p-3 rounded-lg mb-4">
             {error}
-          </p>
+          </div>
         )}
 
+        {/* Inputs */}
         <div className="space-y-4">
           <input
             type="text"
             placeholder="Room Number"
             value={room}
             onChange={e => setRoom(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
           />
 
           <input
@@ -83,20 +93,22 @@ export default function GuestLogin() {
             placeholder="Phone Number"
             value={phone}
             onChange={e => setPhone(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
           />
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
         </div>
 
-        <p className="text-xs text-gray-400 text-center mt-6">
-          Scan QR code in your room to access services
+        {/* Button */}
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-medium transition disabled:opacity-60"
+        >
+          {loading ? 'Signing in…' : 'Login'}
+        </button>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Scan the QR code in your room to access services
         </p>
       </div>
     </div>
