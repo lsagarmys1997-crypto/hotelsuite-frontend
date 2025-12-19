@@ -146,11 +146,14 @@ function About() {
     <div className="bg-white p-5 rounded-2xl shadow-md text-sm text-gray-600">
       <h3 className="font-semibold text-gray-800 mb-2">About HotelSuite</h3>
       <p>
-        HotelSuite lets you request housekeeping, maintenance, food,
-        and concierge services directly from your room.
+        HotelSuite is an all-in-one SaaS platform built for hotels and resorts to simplify guest interactions and streamline internal operations.
+        It unifies guest-facing services—such as service requests, in-stay chat, and targeted promotions—with back-office operations including task ticketing, staff assignment, and real-time management dashboards.
+        HotelSuite helps properties deliver faster service, reduce operational friction, and unlock new revenue opportunities—all from a single, intuitive system.
       </p>
       <p className="mt-2">
-        Designed to make your stay comfortable and hassle-free.
+        For Guests
+        HotelSuite makes your stay effortless.
+        From the moment you check in, HotelSuite lets you connect with the hotel instantly—no calls, no waiting, no confusion.
       </p>
     </div>
   );
