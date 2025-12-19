@@ -108,7 +108,7 @@ export default function GuestLogin() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          Scan the QR code in your room to access services
+          Welcome! Log in to get started with our services
         </p>
       </div>
     </div>
