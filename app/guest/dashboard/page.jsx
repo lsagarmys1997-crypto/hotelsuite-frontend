@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function GuestDashboard() {
   const [activeTab, setActiveTab] = useState('services');
@@ -24,26 +25,65 @@ export default function GuestDashboard() {
       .catch(() => {});
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('guest_token');
+    localStorage.removeItem('guest');
+    window.location.href = '/guest/login';
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-white shadow px-4 py-4">
-        <h1 className="text-xl font-semibold text-gray-800">
-          Welcome{guest?.name ? `, ${guest.name}` : ''} 👋
-        </h1>
-        <p className="text-sm text-gray-500">
-          Room {guest?.room_number || '—'}
-        </p>
+      {/* ================= HEADER ================= */}
+      <div className="bg-white shadow px-4 py-3 flex items-center justify-between">
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="HotelSuite Logo"
+            width={40}
+            height={40}
+            className="rounded"
+            priority
+          />
+          <div>
+            <p className="font-semibold text-gray-800 leading-tight">
+              HotelSuite
+            </p>
+            <p className="text-xs text-gray-500">
+              Room {guest?.room_number || '—'}
+            </p>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="text-sm font-medium text-red-600 hover:underline"
+        >
+          Logout
+        </button>
       </div>
 
-      {/* Tabs */}
+      {/* ================= TABS ================= */}
       <div className="flex justify-around bg-white border-b">
-        <Tab label="Services" active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
-        <Tab label="My Requests" active={activeTab === 'requests'} onClick={() => setActiveTab('requests')} />
-        <Tab label="About" active={activeTab === 'about'} onClick={() => setActiveTab('about')} />
+        <Tab
+          label="Services"
+          active={activeTab === 'services'}
+          onClick={() => setActiveTab('services')}
+        />
+        <Tab
+          label="My Requests"
+          active={activeTab === 'requests'}
+          onClick={() => setActiveTab('requests')}
+        />
+        <Tab
+          label="About"
+          active={activeTab === 'about'}
+          onClick={() => setActiveTab('about')}
+        />
       </div>
 
-      {/* Content */}
+      {/* ================= CONTENT ================= */}
       <div className="p-4">
         {activeTab === 'services' && <Services />}
         {activeTab === 'requests' && <Requests tickets={tickets} />}
@@ -58,7 +98,7 @@ function Tab({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`py-3 text-sm font-medium ${
+      className={`py-3 text-sm font-medium w-full ${
         active
           ? 'text-indigo-600 border-b-2 border-indigo-600'
           : 'text-gray-500'
@@ -83,7 +123,7 @@ function Services() {
       {services.map(s => (
         <div
           key={s.title}
-          className="bg-white rounded-2xl p-4 shadow active:scale-95 transition"
+          className="bg-white rounded-2xl p-4 shadow hover:shadow-md active:scale-95 transition cursor-pointer"
         >
           <div className="text-3xl mb-2">{s.icon}</div>
           <h3 className="font-semibold text-gray-800">{s.title}</h3>
@@ -148,7 +188,7 @@ function About() {
         About Our Hotel
       </h2>
       <p className="text-sm text-gray-600 leading-relaxed">
-        HotelSuite is an all-in-one SaaS platform built for hotels and resorts to simplify guest interactions and streamline internal operations. It unifies guest-facing services—such as service requests, in-stay chat, and targeted promotions—with back-office operations including task ticketing, staff assignment, and real-time management dashboards. HotelSuite helps properties deliver faster service, reduce operational friction, and unlock new revenue opportunities—all from a single, intuitive system.
+        HotelSuite is an all-in-one SaaS platform built for hotels and resorts to simplify guest interactions and streamline internal operations. It unifies guest-facing services—such as service requests, in-stay chat, and targeted promotions—with back-office operations including task ticketing, staff assignment, and real-time management dashboards.
       </p>
       <p className="text-sm text-gray-600 mt-3">
         For emergencies, please contact reception immediately.
