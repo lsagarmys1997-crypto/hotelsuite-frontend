@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function StaffLoginPage() {
   const router = useRouter();
@@ -21,13 +22,8 @@ export default function StaffLoginPage() {
         'https://hotelsuite-backend.onrender.com/api/staff/login',
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email,
-            password
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
         }
       );
 
@@ -43,79 +39,92 @@ export default function StaffLoginPage() {
       localStorage.setItem('staff_token', data.token);
       localStorage.setItem('staff_user', JSON.stringify(data.user));
 
-      // ✅ Go to dashboard (next step)
       router.push('/staff/dashboard');
-
     } catch (err) {
       console.error(err);
-      setError('Server error');
+      setError('Server error. Please try again.');
     }
 
     setLoading(false);
   };
 
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleLogin} style={styles.card}>
-        <h2>Staff Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100 px-4">
+      
+      {/* Card */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-6">
+          <Image
+            src="/logo.png"
+            alt="HotelSuite Logo"
+            width={56}
+            height={56}
+            className="rounded-lg"
+            priority
+          />
+          <h1 className="mt-3 text-xl font-semibold text-gray-800">
+            HotelSuite
+          </h1>
+          <p className="text-sm text-gray-500">
+            Staff Portal
+          </p>
+        </div>
 
-        {error && <p style={styles.error}>{error}</p>}
+        {/* Title */}
+        <h2 className="text-lg font-semibold text-gray-800 text-center mb-4">
+          Staff Login
+        </h2>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={styles.input}
-        />
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={styles.input}
-        />
+        {/* Form */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          
+          <div>
+            <label className="text-sm text-gray-600">Email</label>
+            <input
+              type="email"
+              placeholder="staff@hotel.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
 
-        <button type="submit" disabled={loading} style={styles.button}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
+          <div>
+            <label className="text-sm text-gray-600">Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-60"
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <p className="text-xs text-gray-400 text-center mt-6">
+          Authorized hotel staff only
+        </p>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    background: '#f5f5f5'
-  },
-  card: {
-    background: '#fff',
-    padding: 30,
-    borderRadius: 8,
-    width: 320,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
-  },
-  input: {
-    width: '100%',
-    padding: 10,
-    marginBottom: 12,
-    fontSize: 16
-  },
-  button: {
-    width: '100%',
-    padding: 10,
-    fontSize: 16,
-    cursor: 'pointer'
-  },
-  error: {
-    color: 'red',
-    marginBottom: 10
-  }
-};
