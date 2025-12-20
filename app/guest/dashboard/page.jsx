@@ -10,49 +10,55 @@ export default function GuestDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
-  /* ================= LOAD GUEST + TICKETS ================= */
-  const loadTickets = () => {
+  /* ================= LOAD TICKETS ================= */
+  const loadTickets = async () => {
     const token = localStorage.getItem('guest_token');
     if (!token) return;
 
-    fetch('https://hotelsuite-backend.onrender.com/api/guest/tickets', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setTickets(data.tickets || []))
-      .catch(() => {});
+    try {
+      const res = await fetch(
+        'https://hotelsuite-backend.onrender.com/api/guest/tickets',
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      const data = await res.json();
+      setTickets(data.tickets || []);
+    } catch {
+      setTickets([]);
+    }
   };
 
+  /* ================= INIT ================= */
   useEffect(() => {
     const g = localStorage.getItem('guest_user');
     if (g) setGuest(JSON.parse(g));
     loadTickets();
   }, []);
 
+  /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem('guest_token');
     localStorage.removeItem('guest_user');
     window.location.href = '/guest/login';
   };
 
-  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gray-100">
+
       {/* ================= HEADER ================= */}
       <header className="bg-white shadow px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Image
             src="/logo.png"
-            alt="HotelSuite Logo"
+            alt="HotelSuite"
             width={40}
             height={40}
             className="rounded"
             priority
           />
           <div>
-            <p className="font-semibold text-gray-800 leading-tight">
-              HotelSuite
-            </p>
+            <p className="font-semibold text-gray-800">HotelSuite</p>
             <p className="text-sm text-gray-700">
               {guest?.name ? `Welcome, ${guest.name}` : 'Welcome, Guest'}
             </p>
@@ -98,8 +104,9 @@ export default function GuestDashboard() {
           service={selectedService}
           onClose={() => setShowModal(false)}
           onSuccess={() => {
-            loadTickets();
-            setActiveTab('requests');
+            loadTickets();              // 🔥 refresh tickets
+            setActiveTab('requests');   // 🔥 switch tab
+            setShowModal(false);        // 🔥 close modal
           }}
         />
       )}
@@ -222,8 +229,9 @@ function RequestModal({ service, onClose, onSuccess }) {
       );
 
       if (!res.ok) throw new Error('Failed to raise request');
+
+      setDescription('');
       onSuccess();
-      onClose();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -234,7 +242,7 @@ function RequestModal({ service, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-5 w-full max-w-md shadow-lg">
-        <h2 className="font-semibold text-gray-800 mb-1">
+        <h2 className="font-semibold text-gray-800 mb-2">
           {service.title} Request
         </h2>
 
@@ -243,12 +251,12 @@ function RequestModal({ service, onClose, onSuccess }) {
           placeholder="Describe your request"
           value={description}
           onChange={e => setDescription(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm mt-3"
+          className="w-full border rounded-lg px-3 py-2 text-sm"
         />
 
         {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
 
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex justify-end gap-3 mt-4">
           <button onClick={onClose} className="text-sm text-gray-600">
             Cancel
           </button>
@@ -273,9 +281,8 @@ function About() {
         About HotelSuite
       </h2>
       <p className="text-sm text-gray-600 leading-relaxed">
-        HotelSuite is a unified guest service platform that lets you request
-        housekeeping, room service, maintenance, and concierge support
-        seamlessly during your stay.
+        HotelSuite lets you request housekeeping, room service,
+        maintenance, and concierge support seamlessly during your stay.
       </p>
     </div>
   );
